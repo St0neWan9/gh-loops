@@ -21,7 +21,8 @@ how it is approved, and how the result is merged and reported.
 
 ## Watchers
 
-- **Start:** run `<loop>/watch.sh [seconds]` (default 600) as a background command that notifies
+- **Start:** run `<loop>/watch.sh [seconds]` (default 600; 60 is fine, polls cost no tokens - only
+  GitHub API calls and, every tenth poll, a `git fetch`) as a background command that notifies
   you when it exits (in Claude Code: Bash with `run_in_background: true`). Never use a cron job,
   `/loop` or a scheduled wake-up instead: those wake the agent even when nothing is pending. Run
   one watcher per loop and project; check the running background tasks first.

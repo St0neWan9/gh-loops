@@ -5,13 +5,17 @@
 #   IN-PROGRESS #N …  left `in-progress` (an interrupted pass)
 # Exit 0: checked (output may be empty). 2: the default branch fails check-merge.sh (stop and
 # tell the user). 3: GitHub or the repository unreachable (transient).
-# ISSUES_JSON=<file> replaces the GitHub query (tests).
+# ISSUES_JSON=<file> replaces the GitHub query (tests). GH_LOOPS_SKIP_GATE=1 skips the merge gate.
 dir=$(cd "$(dirname "$0")" && pwd)
 source "$dir/../common/lib.sh"
 
 if [[ -z ${ISSUES_JSON:-} ]]; then
   gh_loops_init || exit 3
-  if ! out=$("$dir/../common/check-merge.sh" main 2>&1); then echo "BLOCKED $out"; exit 2; fi
+  # The merge gate fetches the default branch, the slow part of a poll; the watcher runs it every
+  # few polls (GH_LOOPS_SKIP_GATE=1 skips it on the others).
+  if [[ ${GH_LOOPS_SKIP_GATE:-} != 1 ]]; then
+    if ! out=$("$dir/../common/check-merge.sh" main 2>&1); then echo "BLOCKED $out"; exit 2; fi
+  fi
   issues=$(gh issue list -R "$REPO" --state open --limit 100 --json number,title,labels,comments) || exit 3
 else
   issues=$(cat "$ISSUES_JSON")
