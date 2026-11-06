@@ -37,7 +37,28 @@ needs work.
 The full workflow the agent follows is in [`skill/SKILL.md` and `skill/issue/LOOP.md`](skill/SKILL.md). Your project's own
 agent instructions (`AGENTS.md`, `CLAUDE.md`, …) decide how changes are built and tested.
 
-## Install
+## Install as a gh extension
+
+```sh
+gh extension install St0neWan9/gh-loops
+gh loops status        # from any project's checkout
+```
+
+| Command | What it does |
+|---|---|
+| `gh loops status` | what needs the agent right now, from every loop |
+| `gh loops issue pending` | the issue loop's pending lines |
+| `gh loops issue watch [seconds]` | poll in the foreground until there is work (Ctrl-C stops) |
+| `gh loops issue labels` | create the workflow labels in the repository |
+| `gh loops check ready <N>` | is issue N approved by the maintainer? |
+| `gh loops check merge <PR\|main>` | may this be merged automatically? |
+| `gh loops version` | the installed version |
+
+Update with `gh extension upgrade gh-loops`. A watcher started through `gh loops issue watch`
+runs in the foreground; the skill runs it as a background command instead so the agent is woken
+when it exits.
+
+## Install as a skill
 
 Requires a coding agent that loads skills, `git`, `jq` and an authenticated [GitHub CLI](https://cli.github.com/)
 (`gh auth login`).

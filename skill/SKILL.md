@@ -31,6 +31,12 @@ how it is approved, and how the result is merged and reported.
 - **Stop:** stop the background task. Watchers live only as long as the agent session.
 - **Check once:** `<loop>/pending.sh` prints the same lines without waiting.
 
+## Command line
+
+When installed as a gh extension (`gh extension install St0neWan9/gh-loops`), `gh loops status`
+from a project's checkout prints the same lines as running each loop's `pending.sh`, `gh loops
+issue watch` polls in the foreground, and `gh loops check ready|merge` runs the gates.
+
 ## Settings
 
 The repository comes from the checkout; the maintainer (the only login whose approval counts)

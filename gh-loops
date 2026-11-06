@@ -1,0 +1,49 @@
+#!/bin/bash
+# gh-loops — the gh extension form of this repository (gh extension install St0neWan9/gh-loops).
+# `gh loops <command>` runs the loops' scripts from the current project's checkout.
+#
+#   gh loops status                 what needs the agent right now, from every loop
+#   gh loops issue pending          the issue loop's pending lines (same as status for now)
+#   gh loops issue watch [seconds]  poll in the foreground until there is work (Ctrl-C stops)
+#   gh loops issue labels           create the workflow labels in the repository if missing
+#   gh loops check ready <N>        is issue N approved by the maintainer?
+#   gh loops check merge <PR|main>  may this be merged automatically?
+#   gh loops version                the installed version
+set -uo pipefail
+here=$(cd "$(dirname "$0")" && pwd -P)
+skill="$here/skill"
+version=$(cat "$here/VERSION" 2>/dev/null || echo unknown)
+
+usage() { sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'; }
+
+cmd=${1:-status}; shift || true
+case $cmd in
+  status)
+    out=""
+    for d in "$skill"/*/; do
+      [[ -f $d/pending.sh ]] || continue
+      lines=$("$d/pending.sh" 2>&1); code=$?
+      [[ $code == 3 ]] && { echo "cannot reach GitHub" >&2; exit 3; }
+      [[ $code == 2 ]] && { echo "$lines"; exit 2; }
+      out+="$lines"$'\n'
+    done
+    if [[ -z ${out//[$'\n']/} ]]; then echo "nothing needs the agent"; else printf '%s' "$out"; fi ;;
+  issue)
+    sub=${1:-pending}; shift || true
+    case $sub in
+      pending) exec "$skill/issue/pending.sh" ;;
+      watch) exec "$skill/issue/watch.sh" "${1:-600}" ;;
+      labels) exec "$skill/issue/setup-labels.sh" ;;
+      *) usage; exit 1 ;;
+    esac ;;
+  check)
+    sub=${1:-}; shift || true
+    case $sub in
+      ready) exec "$skill/issue/check-ready.sh" "${1:?issue number}" ;;
+      merge) exec "$skill/common/check-merge.sh" "${1:?PR number or main}" ;;
+      *) usage; exit 1 ;;
+    esac ;;
+  version) echo "gh-loops $version" ;;
+  -h|--help|help) usage ;;
+  *) usage; exit 1 ;;
+esac
