@@ -18,7 +18,10 @@ gh_loops_init() {
   REPO=${env_repo:-${REPO:-}}
   MAINTAINER=${env_maintainer:-${MAINTAINER:-}}
   if [[ -z $REPO ]]; then
-    REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null) || { echo "cannot find the GitHub repository" >&2; return 3; }
+    # One retry: a watcher polls for hours, and a single hiccup in gh must not read as "no repository".
+    REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null) \
+      || { sleep 2; REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null); } \
+      || { echo "cannot find the GitHub repository" >&2; return 3; }
   fi
   [[ -n $MAINTAINER ]] || MAINTAINER=${REPO%%/*}
   export REPO MAINTAINER
