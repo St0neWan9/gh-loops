@@ -26,7 +26,9 @@ how it is approved, and how the result is merged and reported.
   you when it exits (in Claude Code: Bash with `run_in_background: true`). Never use a cron job,
   `/loop` or a scheduled wake-up instead: those wake the agent even when nothing is pending. Run
   one watcher per loop and project; check the running background tasks first.
-- **Exit 0:** it printed the work. Read that loop's `LOOP.md`, do one pass, start it again.
+- **Exit 0:** it printed the work. Start the watcher again **first**, then do the pass: a pass can
+  take long, and monitoring must not stop while it runs. A loop's `LOOP.md` says how a running pass
+  keeps itself from being reported again (the issue loop claims the issue).
 - **Exit 2 (`BLOCKED …`):** the default branch failed `common/check-merge.sh main`. Stop and tell
   the user; do not restart until they say so.
 - **Stop:** stop the background task. Watchers live only as long as the agent session.
