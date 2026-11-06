@@ -32,9 +32,12 @@ the agent:
 1. **Gate.** For each `READY #N`, run `issue/check-ready.sh <N>`. Only `READY` lets work start.
    On `NOT READY` because someone else applied `ready` or edited the issue after approval: remove
    `ready`, comment what happened (no blame, no details of the check), do not develop.
-2. **Start.** Add `in-progress`, remove `ready`, and claim it with `issue/claim.sh <N>`. A claimed
-   issue is not reported again (for two hours), so start the watcher again right away and keep
-   working. Release it with `issue/claim.sh --release <N>` when the pass ends, merged or not. Create the branch `issue/<N>-<slug>` from the
+2. **Start.** Add `in-progress`, remove `ready`, and claim it with `issue/claim.sh <N>`. Start the
+   watcher again right away. **Run `issue/claim.sh --touch <N>` after each meaningful step** (and
+   before anything long): a claim not touched for 30 minutes goes stale and the issue is reported
+   again as IN-PROGRESS, so a stopped or interrupted pass is picked up. Release it with
+   `issue/claim.sh --release <N>` when the pass ends, merged or not. Several issues can be
+   claimed at once; they are done one at a time. Create the branch `issue/<N>-<slug>` from the
    up-to-date default branch. Follow the project's planning rules if it has any.
 3. **Develop** as the project's rules require: tests, a clean build, and any real-app check they ask
    for.

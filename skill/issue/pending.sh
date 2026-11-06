@@ -6,7 +6,8 @@
 # Exit 0: checked (output may be empty). 2: the default branch fails check-merge.sh (stop and
 # tell the user). 3: GitHub or the repository unreachable (transient).
 # ISSUES_JSON=<file> replaces the GitHub query (tests). GH_LOOPS_SKIP_GATE=1 skips the merge gate.
-# An issue claimed with issue/claim.sh is not reported for GH_LOOPS_CLAIM_TTL seconds (7200).
+# An issue claimed with issue/claim.sh is not reported until the claim is GH_LOOPS_CLAIM_TTL seconds
+# old (1800): the agent touches the claim while it works.
 dir=$(cd "$(dirname "$0")" && pwd)
 source "$dir/../common/lib.sh"
 
@@ -27,7 +28,7 @@ claims=""
 if root=$(gh_loops_root 2>/dev/null); then claims=$(git -C "$root" rev-parse --git-dir 2>/dev/null)/gh-loops; fi
 claimed() {
   [[ -n $claims && -f $claims/claim-$1 ]] || return 1
-  local at ttl=${GH_LOOPS_CLAIM_TTL:-7200}; at=$(<"$claims/claim-$1")
+  local at ttl=${GH_LOOPS_CLAIM_TTL:-1800}; at=$(<"$claims/claim-$1")
   (( $(date +%s) - at < ttl ))
 }
 if [[ -n $claims && -d $claims ]]; then
