@@ -7,17 +7,17 @@
 # tell the user). 3: GitHub or the repository unreachable (transient).
 # ISSUES_JSON=<file> replaces the GitHub query (tests).
 dir=$(cd "$(dirname "$0")" && pwd)
-source "$dir/lib.sh"
+source "$dir/../common/lib.sh"
 
 if [[ -z ${ISSUES_JSON:-} ]]; then
-  issue_loop_init || exit 3
-  if ! out=$("$dir/check-merge.sh" main 2>&1); then echo "BLOCKED $out"; exit 2; fi
+  gh_loops_init || exit 3
+  if ! out=$("$dir/../common/check-merge.sh" main 2>&1); then echo "BLOCKED $out"; exit 2; fi
   issues=$(gh issue list -R "$REPO" --state open --limit 100 --json number,title,labels,comments) || exit 3
 else
   issues=$(cat "$ISSUES_JSON")
 fi
 
-jq -r --arg m "$ISSUE_LOOP_MARKER" '
+jq -r --arg m "$GH_LOOPS_MARKER" '
   .[] | [.labels[].name] as $l
   | if ($l | index("in-progress")) then "IN-PROGRESS #\(.number) \(.title)"
     elif ($l | index("ready")) then "READY #\(.number) \(.title)"

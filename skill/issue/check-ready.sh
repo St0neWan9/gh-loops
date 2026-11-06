@@ -5,10 +5,10 @@
 #   2. the most recent `ready` labeling was done by the maintainer;
 #   3. nobody but the maintainer edited the title or body after that.
 # Anything else exits 1 with the reason. Fails closed on API errors.
-source "$(dirname "$0")/lib.sh"
+source "$(dirname "$0")/../common/lib.sh"
 N=${1:?usage: check-ready.sh <issue number>}
 fail() { echo "NOT READY #$N: $*"; exit 1; }
-issue_loop_init || fail "no repository"
+gh_loops_init || fail "no repository"
 
 issue=$(gh api "repos/$REPO/issues/$N") || fail "cannot read the issue"
 [[ $(jq -r '.state' <<<"$issue") == open ]] || fail "issue is not open"

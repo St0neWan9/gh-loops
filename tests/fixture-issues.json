@@ -1,9 +1,9 @@
 [
   {"number": 7, "title": "Ready issue", "labels": [{"name": "ready"}], "comments": []},
   {"number": 8, "title": "Waiting for an answer", "labels": [{"name": "needs-answer"}],
-   "comments": [{"body": "Which one?\n\n<!-- issue-loop -->"}]},
+   "comments": [{"body": "Which one?\n\n<!-- gh-loops -->"}]},
   {"number": 9, "title": "Answered", "labels": [{"name": "needs-answer"}],
-   "comments": [{"body": "Which one?\n\n<!-- issue-loop -->"}, {"body": "The second."}]},
+   "comments": [{"body": "Which one?\n\n<!-- gh-loops -->"}, {"body": "The second."}]},
   {"number": 10, "title": "Interrupted", "labels": [{"name": "in-progress"}, {"name": "ready"}], "comments": []},
   {"number": 11, "title": "Not approved", "labels": [{"name": "enhancement"}], "comments": []}
 ]

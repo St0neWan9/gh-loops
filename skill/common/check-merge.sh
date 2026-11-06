@@ -7,18 +7,18 @@
 #   - for a PR: the PR changes anything under .github/ (templates, workflows, CODEOWNERS):
 #     those need the maintainer, never an automatic merge.
 # Fails closed on errors.
-source "$(dirname "$0")/lib.sh"
+source "$(dirname "$0")/../common/lib.sh"
 target=${1:?usage: check-merge.sh <pr number> | main}
 fail() { echo "DO NOT MERGE ($target): $*"; exit 1; }
-issue_loop_init || fail "no repository"
+gh_loops_init || fail "no repository"
 
 if [[ $target == main ]]; then
   branch=$(gh repo view "$REPO" --json defaultBranchRef --jq .defaultBranchRef.name) || fail "cannot read the default branch"
   git fetch -q origin "$branch" || fail "cannot fetch $branch"
   ref=origin/$branch
 else
-  git fetch -q origin "pull/$target/head:refs/issue-loop/pr-$target" --force || fail "cannot fetch the PR head"
-  ref=refs/issue-loop/pr-$target
+  git fetch -q origin "pull/$target/head:refs/gh-loops/pr-$target" --force || fail "cannot fetch the PR head"
+  ref=refs/gh-loops/pr-$target
   changed=$(gh pr diff "$target" --repo "$REPO" --name-only) || fail "cannot list the PR's files"
   github_changes=$(grep -E '^\.github/' <<<"$changed" || true)
   [[ -z $github_changes ]] || fail "changes under .github/ need the maintainer: $(tr '\n' ' ' <<<"$github_changes")"
