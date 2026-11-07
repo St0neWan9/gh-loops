@@ -10,11 +10,16 @@
 source "$(dirname "$0")/../common/lib.sh"
 target=${1:?usage: check-merge.sh <pr number> | main}
 fail() { echo "DO NOT MERGE ($target): $*"; exit 1; }
+# GitHub drops a request now and then (EOF on api.github.com). A watcher polls for hours, so a
+# single hiccup must not read as "the default branch is bad" and stop it: retry the network calls,
+# then fail closed.
+retry() { local n=0; until "$@"; do n=$((n + 1)); ((n < 3)) || return 1; sleep 2; done; }
+default_branch() { gh repo view "$REPO" --json defaultBranchRef --jq .defaultBranchRef.name; }
 gh_loops_init || fail "no repository"
 
 if [[ $target == main ]]; then
-  branch=$(gh repo view "$REPO" --json defaultBranchRef --jq .defaultBranchRef.name) || fail "cannot read the default branch"
-  git fetch -q origin "$branch" || fail "cannot fetch $branch"
+  branch=$(retry default_branch) || fail "cannot read the default branch"
+  retry git fetch -q origin "$branch" || fail "cannot fetch $branch"
   ref=origin/$branch
 else
   git fetch -q origin "pull/$target/head:refs/gh-loops/pr-$target" --force || fail "cannot fetch the PR head"
