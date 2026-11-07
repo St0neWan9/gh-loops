@@ -33,6 +33,9 @@ how it is approved, and how the result is merged and reported.
   the user; do not restart until they say so.
 - **Stop:** stop the background task. Watchers live only as long as the agent session.
 - **Check once:** `<loop>/pending.sh` prints the same lines without waiting.
+- **Logs:** the scripts log their steps to **stderr** (repo, issue count, skips of claimed issues, one
+  heartbeat per poll). stdout stays empty when idle; a stdout line is exactly what makes the
+  watcher exit and wake the agent, so never log there.
 
 ## Command line
 

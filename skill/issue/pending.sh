@@ -11,14 +11,21 @@
 dir=$(cd "$(dirname "$0")" && pwd)
 source "$dir/../common/lib.sh"
 
+# Progress goes to stderr: stdout carries only the lines that mean "the agent has work", and the
+# watcher treats any stdout line as a reason to exit and wake the agent.
+log() { printf '[pending] %s\n' "$*" >&2; }
+
 if [[ -z ${ISSUES_JSON:-} ]]; then
-  gh_loops_init || exit 3
+  gh_loops_init || { log "cannot reach $(gh_loops_root 2>/dev/null || echo this checkout)"; exit 3; }
+  log "repo $REPO, branch gate"
+
   # The merge gate fetches the default branch, the slow part of a poll; the watcher runs it every
   # few polls (GH_LOOPS_SKIP_GATE=1 skips it on the others).
   if [[ ${GH_LOOPS_SKIP_GATE:-} != 1 ]]; then
     if ! out=$("$dir/../common/check-merge.sh" main 2>&1); then echo "BLOCKED $out"; exit 2; fi
   fi
-  issues=$(gh issue list -R "$REPO" --state open --limit 100 --json number,title,labels,comments) || exit 3
+  issues=$(gh issue list -R "$REPO" --state open --limit 100 --json number,title,labels,comments) || { log "issue list failed"; exit 3; }
+  log "open issues: $(jq 'length' <<<"$issues")"
 else
   issues=$(cat "$ISSUES_JSON")
 fi
@@ -45,8 +52,10 @@ lines=$(jq -r --arg m "$GH_LOOPS_MARKER" '
     elif ($l | index("needs-answer")) and (.comments | length) > 0
          and ((.comments[-1].body | contains($m)) | not) then "ANSWERED #\(.number) \(.title)"
     else empty end' <<<"$issues") || exit 3
+found=0
 while IFS= read -r line; do
   [[ -n $line ]] || continue
   num=${line#*#}; num=${num%% *}
-  claimed "$num" || printf '%s\n' "$line"
+  if claimed "$num"; then log "claimed #$num, skipped"; else printf '%s\n' "$line"; found=$((found + 1)); fi
 done <<<"$lines"
+log "needs the agent: $found"

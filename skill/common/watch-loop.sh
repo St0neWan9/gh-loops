@@ -11,8 +11,12 @@ gate_every=${GH_LOOPS_GATE_EVERY:-10}
 poll=0
 while true; do
   poll=$((poll + 1))
+  # One heartbeat line per poll on stderr (stdout must stay empty when idle: a line there is what
+  # wakes the agent).
   if (( poll % gate_every == 0 )); then out=$("$pending"); else out=$(GH_LOOPS_SKIP_GATE=1 "$pending"); fi
   code=$?
+  printf '[watch %s] poll %d: exit %d, %s\n' "$(date +%H:%M:%S)" "$poll" "$code" \
+    "$( [[ -n $out ]] && echo "work found" || echo "idle" )" >&2
   if [[ $code == 0 && -n $out ]]; then echo "$out"; exit 0; fi
   if [[ $code == 2 ]]; then echo "$out"; exit 2; fi
   sleep "$interval"
